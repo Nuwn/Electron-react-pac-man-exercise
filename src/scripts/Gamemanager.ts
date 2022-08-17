@@ -1,5 +1,4 @@
 import CoroutineUtility, { WaitForSeconds } from "./CoroutineUtility";
-import Tick from "./Tick";
 
 export default class Gamemanager {
     x: number = 0;

@@ -33,7 +33,7 @@ export default class CoroutineUtility {
         });
     }
 
-    static StartCoroutine(action: Generator){
+    static StartCoroutine(action: any){
         const coroutine = Coroutine.Generate(action, () => {
             CoroutineUtility.Remove(coroutine);
         });
@@ -50,10 +50,10 @@ export default class CoroutineUtility {
 
 class Coroutine implements Enumerator{
     isDone: boolean | undefined = false;
-    action: Generator;
+    action: any;
     onComplete: () => void;
 
-    constructor(action: Generator, onComplete: () => void){
+    constructor(action: any, onComplete: () => void){
         this.action = action;
         this.onComplete = () => {
             onComplete();
@@ -67,7 +67,7 @@ class Coroutine implements Enumerator{
         this.isDone = this.action.next().done;
     }
 
-    static Generate(_action: Generator, _onComplete: () => void){
+    static Generate(_action: any, _onComplete: () => void){
         return new Coroutine(_action, _onComplete);
     }
 }
@@ -79,7 +79,6 @@ export const WaitUntil = function* (rule: () => boolean){
     yield true;
 } 
 export const WaitForSeconds = function* (seconds: number){
-    console.time();
     const time = seconds * 1000; // JS likes miliseconds
     const start = Date.now();
 
@@ -87,7 +86,6 @@ export const WaitForSeconds = function* (seconds: number){
         yield false;
     }
     yield true;
-    console.timeEnd();
 }
 
 export interface Enumerator {
