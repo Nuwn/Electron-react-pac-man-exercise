@@ -1,72 +1,37 @@
-import { useMemo, useState } from 'react';
 import * as gridSettings from './gridSettings.json';
-import { GetKeyDown } from 'scripts/InputManager';
 import EasyStar from 'easystarjs';
+import { useMemo } from 'react';
+import gameboard from '../../assets/Gameboard.png';
 
-import './Grid.scss';
-
-export const Grid = () => {
-    const grid = useMemo(() => GridData.GetOrCreateInstance(), []);
-    const [selected, setSelected]= useState<Vector2[]>([]);
-
-    function GridPositionClick(rect: Vector2){
-        const index = selected.indexOf(rect);
-        if (index > -1) {
-            const filtered = selected.filter(item => item != rect);
-            setSelected(filtered);
-            return;
-        }
-        setSelected(current => [...current, rect]);
-    }
-
-    function OnMouseEnter(event: any, rect: Vector2){
-        event.preventDefault();
-        event.stopPropagation();
-        
-        if(GetKeyDown('Mouse0')){
-            GridPositionClick(rect);
-        }
-    }
+export const GridView = () => {
+    const grid = useMemo(() => Grid.GetOrCreateInstance(), []);
 
     return (
         <div className="grid">
-            <DebugGrid grid={grid} Click={GridPositionClick} MouseEnter={OnMouseEnter} SelectedRef={selected}/>
+            <img src={gameboard} style={{position: 'absolute', width: '100%', height: '100%' }} />
+            {grid.matrix.map((y: number[], yindex: number) => y.map((val: number, xindex: number) => {
+                const rect = {x: xindex, y: yindex};
+                const pos = Grid.GetPositionFromCoords(rect);
+                const size = 20;
+                pos.x += 10;
+                pos.y += 10;
+
+                //update this with points
+                return (
+                    <div key={yindex + 1 * xindex} style={{ position:'absolute', color:'white', top: pos.y, left: pos.x, width: size, height: size, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                        {val === 1 ? '●' : ''}
+                    </div>
+                )
+            }))}
         </div>
     );
 };
 
-
-const DebugGrid: (props: any) => JSX.Element = (props: any) => {
-    if(process.env.NODE_ENV !== 'development') return(<></>);
-
-    return(
-    <div>
-        {props.grid.grid.map((rect: Vector2, index:number) => (
-            <div key={index} className="grid-rect" onClick={() => props.Click(rect)} onMouseEnter={(e) => props.MouseEnter(e, rect)}
-                style={{
-                    height: props.grid.positionMultiplier.y, 
-                    width: props.grid.positionMultiplier.x,
-                    top: rect.y * props.grid.positionMultiplier.y,
-                    left: rect.x * props.grid.positionMultiplier.x
-                }}>
-                <div draggable={false} className="grid-rect-button" style={{backgroundColor: props.SelectedRef.includes(rect) ? 'red': 'green'}}></div>
-            </div>
-        ))} 
-     </div>
-     );
-}
-
-
-
-export class GridData{
-    static instance: GridData;
+export class Grid{
+    static instance: Grid;
 
     positionMultiplier: Vector2;
-    grid: Vector2[] = [];
-    walls: Vector2[] = [];
-
     matrix: number[][];
-
     easystar: any; // a* pathfinding
 
     constructor(){
@@ -75,22 +40,29 @@ export class GridData{
             y: window.innerHeight  / gridSettings.gridSize.y
         }
 
-        this.matrix = Array(gridSettings.gridSize.y).fill(1).map(()=>Array(gridSettings.gridSize.x).fill(1))
+        this.matrix = gridSettings.grid;
 
-        // for (let x = 0; x < gridSettings.gridSize.x; x++) {
-        //     for (let y = 0; y < gridSettings.gridSize.y; y++) {
-        //         this.grid.push({x: x, y: y});
-        //     }          
-        // }   
-        
         this.SetupEasystar();
     }
 
     SetupEasystar(){
-        this.easystar = new EasyStar.js();
+        const easystar = new EasyStar.js();
+        easystar.setGrid(this.matrix);
+        easystar.setAcceptableTiles([1]);
+        this.easystar = easystar;
+    }
+
+    static SetWeight(position: Vector2, weight: number){
+        Grid.instance.matrix[position.y][position.x] = weight;
+        console.log(Grid.instance.matrix);
     }
 
     static GetOrCreateInstance(){
-        return GridData.instance ?? new GridData();
+        return Grid.instance ?? new Grid();
+    }
+
+    static GetPositionFromCoords(coords: Vector2){
+        const multiplier = Grid.GetOrCreateInstance().positionMultiplier;
+        return {x: coords.x * multiplier.x, y: coords.y * multiplier.y}
     }
 }

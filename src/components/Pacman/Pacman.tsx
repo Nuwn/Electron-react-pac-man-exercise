@@ -1,41 +1,50 @@
-import { useEffect, useMemo, useState } from "react";
+import { Grid } from "components/Grid/Grid";
+import { useEffect, useState } from "react";
 import CoroutineUtility, { WaitForSeconds } from "scripts/CoroutineUtility";
 import { GetHorizontal, GetVertical } from "scripts/InputManager";
+import Tick from "scripts/Tick";
 
-const style = {
+const style : any = {
     position: 'absolute',
     borderRadius: '100%',
     border: 0,
     backgroundColor: 'yellow',
-    height: 30, 
-    width: 30, 
-    transition: 'all 0.2s linear'
+    height: 36, 
+    width: 36, 
+    transition: 'all 0.37s linear'
 }
 
 export default function Pacman() {
     const enabled = true;
-    const startPos = {x: 0, y: 0};
+    const startPos = {x: 25, y: 16};
 
-    const [targetPosition, setTargetPosition] = useState<Vector2>(startPos);
+    const [coords, setCoords] = useState<Vector2>(startPos);
+    const [position, setTargetPosition] = useState<Vector2>(startPos);
+
 
     useEffect(() => {
-        console.log(targetPosition);
-    }, [targetPosition]);
 
-    const OnUpdate = useMemo(() => {
+        const lastInput: Vector2 = {x: 0, y: 0};
+
+        Tick.OnUpdate(() => {
+            let input = {x: GetHorizontal(), y: GetVertical()};
+
+            if(input == {x: 0, y: 0}) 
+                return;
+                
+        })
+
         function* Movement(){
             while(() => enabled === true){
-                yield* WaitForSeconds(0.2);
-                
+                yield* WaitForSeconds(0.2);              
                 // validate grid
                 // update target pos
-                setTargetPosition((current) => { 
-                    let input = {x: GetHorizontal(), y: GetVertical()};
-                    let nextGrid = { x: current.x + input.x, y: current.y + input.y };
-                    
+                // setCoords((current) => { 
 
-                    return nextGrid;
-                });
+                //     setTargetPosition(Grid.GetPositionFromCoords(nextGrid));
+
+                //     return nextGrid;
+                // });
             }
         }
 
@@ -43,6 +52,6 @@ export default function Pacman() {
     }, []);
 
     return (
-        <div className="player" style={{...style, ...{top: targetPosition.y, left: targetPosition.x}}}></div>
+        <div className="player" style={{...style, ...{top: position.y + 7, left: position.x + 7}}}></div>
     );
 }

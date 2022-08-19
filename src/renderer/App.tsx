@@ -10,6 +10,9 @@ new Tick(60);
 InputGetOrCreateInstance();
 
 const Menu = () => {
+    console.log(window.innerWidth);
+    console.log(window.innerHeight);
+
     return(
         <>
             <Link to='/gameplay'>aaa</Link>
