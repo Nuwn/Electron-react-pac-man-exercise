@@ -1,8 +1,9 @@
 import { Grid } from "components/Grid/Grid";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CoroutineUtility, { WaitForSeconds } from "scripts/CoroutineUtility";
-import { GetHorizontal, GetVertical } from "scripts/InputManager";
+import { GetSingleDirection } from "scripts/InputManager";
 import Tick from "scripts/Tick";
+import { Vector2 } from "scripts/Types";
 
 const style : any = {
     position: 'absolute',
@@ -11,40 +12,73 @@ const style : any = {
     backgroundColor: 'yellow',
     height: 36, 
     width: 36, 
-    transition: 'all 0.37s linear'
+    transition: 'all 0.2s linear'
 }
 
 export default function Pacman() {
     const enabled = true;
-    const startPos = {x: 25, y: 16};
+    const startPos = new Vector2(25, 16);
 
-    const [coords, setCoords] = useState<Vector2>(startPos);
-    const [position, setTargetPosition] = useState<Vector2>(startPos);
+    const [coords, setCoords] = useState<IVector2>(startPos);
+    const [position, setTargetPosition] = useState<IVector2>(Grid.GetPositionFromCoords(startPos));
 
+    useMemo(() => {
 
-    useEffect(() => {
+        let prevInput: IVector2 = Vector2.Zero();
+        let lastInput: IVector2 = Vector2.Zero();
 
-        const lastInput: Vector2 = {x: 0, y: 0};
+        Tick.OnUpdate(() => {          
+            let input = GetSingleDirection();
 
-        Tick.OnUpdate(() => {
-            let input = {x: GetHorizontal(), y: GetVertical()};
-
-            if(input == {x: 0, y: 0}) 
-                return;
-                
-        })
+            if(input != Vector2.Zero()) 
+                lastInput = input;  
+        });
 
         function* Movement(){
             while(() => enabled === true){
                 yield* WaitForSeconds(0.2);              
-                // validate grid
-                // update target pos
-                // setCoords((current) => { 
+                
+                setCoords((current) => { 
 
-                //     setTargetPosition(Grid.GetPositionFromCoords(nextGrid));
-
-                //     return nextGrid;
-                // });
+                    // We have not made a move
+                    if (Vector2.isZero(lastInput) && Vector2.isZero(prevInput)){
+                        return current;
+                    }
+                    // if no new input, keep moving with previous action
+                    if(Vector2.isZero(lastInput))
+                    {
+                        const newDir = {x: current.x + prevInput.x, y: current.y + prevInput.y};
+                        
+                        if(Grid.ValidateCoord(newDir)){
+                            setTargetPosition( Grid.GetPositionFromCoords(newDir));
+                            return newDir;
+                        }
+                        else{
+                            return current;
+                        }
+                    }
+                    else{
+                        // we have new input position
+                        let newDir = {x: current.x + lastInput.x, y: current.y + lastInput.y};
+                        
+                        if(Grid.ValidateCoord(newDir)){
+                            setTargetPosition( Grid.GetPositionFromCoords(newDir));
+                            prevInput = lastInput;
+                            return newDir;
+                        }
+                        else{
+                            newDir = {x: current.x + prevInput.x, y: current.y + prevInput.y};
+                        
+                            if(Grid.ValidateCoord(newDir)){
+                                setTargetPosition( Grid.GetPositionFromCoords(newDir));
+                                return newDir;
+                            }
+                            else{
+                                return current;
+                            }
+                        }
+                    }
+                });
             }
         }
 
@@ -52,6 +86,6 @@ export default function Pacman() {
     }, []);
 
     return (
-        <div className="player" style={{...style, ...{top: position.y + 7, left: position.x + 7}}}></div>
+        <div className="player" style={{...style, ...{top: position.y + 2, left: position.x + 2}}}></div>
     );
 }

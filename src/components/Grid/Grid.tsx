@@ -30,7 +30,7 @@ export const GridView = () => {
 export class Grid{
     static instance: Grid;
 
-    positionMultiplier: Vector2;
+    positionMultiplier: IVector2;
     matrix: number[][];
     easystar: any; // a* pathfinding
 
@@ -52,7 +52,7 @@ export class Grid{
         this.easystar = easystar;
     }
 
-    static SetWeight(position: Vector2, weight: number){
+    static SetWeight(position: IVector2, weight: number){
         Grid.instance.matrix[position.y][position.x] = weight;
         console.log(Grid.instance.matrix);
     }
@@ -61,7 +61,16 @@ export class Grid{
         return Grid.instance ?? new Grid();
     }
 
-    static GetPositionFromCoords(coords: Vector2){
+    
+    static ValidateCoord(coords: IVector2){
+        const grid = Grid.GetOrCreateInstance();
+        if((coords.x < 0 || coords.x > gridSettings.gridSize.x) || (coords.y < 0 || coords.y > gridSettings.gridSize.y))
+            return false;
+            
+        return grid.matrix[coords.y][coords.x] === 1;
+    }
+
+    static GetPositionFromCoords(coords: IVector2){
         const multiplier = Grid.GetOrCreateInstance().positionMultiplier;
         return {x: coords.x * multiplier.x, y: coords.y * multiplier.y}
     }
