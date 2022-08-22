@@ -1,7 +1,9 @@
 import { Grid } from "components/Grid/Grid";
-import { useEffect, useMemo, useState } from "react";
-import CoroutineUtility, { WaitForSeconds } from "scripts/CoroutineUtility";
+import { useEffect, useState } from "react";
+import CoroutineUtility, { WaitForSeconds, WaitUntil } from "scripts/CoroutineUtility";
+import { EventManager } from "scripts/EventManager";
 import { GetSingleDirection } from "scripts/InputManager";
+import { Collider, Physics } from "scripts/Physics";
 import Tick from "scripts/Tick";
 import { Vector2 } from "scripts/Types";
 
@@ -15,40 +17,82 @@ const style : any = {
     transition: 'all 0.2s linear'
 }
 
-export default function Pacman() {
-    const enabled = true;
-    const startPos = new Vector2(25, 16);
+const startPosition = new Vector2(16, 15);
 
-    const [coords, setCoords] = useState<IVector2>(startPos);
-    const [position, setTargetPosition] = useState<IVector2>(Grid.GetPositionFromCoords(startPos));
+class Pacman{
 
-    useMemo(() => {
+    enabled = false;
+    prevInput: IVector2 = Vector2.Zero();
+    lastInput: IVector2 = Vector2.Zero();
+    coroutine: any;
 
-        let prevInput: IVector2 = Vector2.Zero();
-        let lastInput: IVector2 = Vector2.Zero();
+    collider: Collider = new Collider();
 
-        Tick.OnUpdate(() => {          
-            let input = GetSingleDirection();
+    SetEnabled(v: boolean){
+        this.enabled = !v
+    }
 
-            if(input != Vector2.Zero()) 
-                lastInput = input;  
-        });
+    constructor(setCoords: any, setTargetPosition: any){
+        this.SetEnabled = this.SetEnabled.bind(this);
+        this.OnUpdate = this.OnUpdate.bind(this);
 
-        function* Movement(){
-            while(() => enabled === true){
-                yield* WaitForSeconds(0.2);              
-                
-                setCoords((current) => { 
+        Physics.Register(this.collider);
+        Tick.OnUpdate(this.OnUpdate);
+        this.coroutine = CoroutineUtility.StartCoroutine(this.Movement(setCoords, setTargetPosition));
+        EventManager.AddListner("OnSetPause", this.SetEnabled);
+    }
+    
+    Dispose() {
+        Physics.Unregister(this.collider);
+        Tick.StopUpdate(this.OnUpdate);
+        CoroutineUtility.StopCoroutine(this.coroutine);
+        EventManager.RemoveListner("OnSetPause", this.SetEnabled);
+    }
 
-                    // We have not made a move
-                    if (Vector2.isZero(lastInput) && Vector2.isZero(prevInput)){
+    OnUpdate(){         
+        let input = GetSingleDirection();
+
+        if(input != Vector2.Zero()) 
+            this.lastInput = input;  
+    }
+    *Movement(setCoords: any, setTargetPosition: any){
+        while(true){
+            yield* WaitUntil(() => this.enabled);
+            yield* WaitForSeconds(0.2);              
+            
+            setCoords((current: IVector2) => { 
+                const prevInput = this.prevInput;
+                const lastInput = this.lastInput;
+
+                // We have not made a move
+                if (Vector2.isZero(lastInput) && Vector2.isZero(prevInput)){
+                    return current;
+                }
+                // if no new input, keep moving with previous action
+                if(Vector2.isZero(lastInput))
+                {
+                    const newDir = {x: current.x + prevInput.x, y: current.y + prevInput.y};
+                    
+                    if(Grid.ValidateCoord(newDir)){
+                        setTargetPosition( Grid.GetPositionFromCoords(newDir));
+                        return newDir;
+                    }
+                    else{
                         return current;
                     }
-                    // if no new input, keep moving with previous action
-                    if(Vector2.isZero(lastInput))
-                    {
-                        const newDir = {x: current.x + prevInput.x, y: current.y + prevInput.y};
-                        
+                }
+                else{
+                    // we have new input position
+                    let newDir = {x: current.x + lastInput.x, y: current.y + lastInput.y};
+                    
+                    if(Grid.ValidateCoord(newDir)){
+                        setTargetPosition( Grid.GetPositionFromCoords(newDir));
+                        this.prevInput = lastInput;
+                        return newDir;
+                    }
+                    else{
+                        newDir = {x: current.x + prevInput.x, y: current.y + prevInput.y};
+                    
                         if(Grid.ValidateCoord(newDir)){
                             setTargetPosition( Grid.GetPositionFromCoords(newDir));
                             return newDir;
@@ -57,33 +101,25 @@ export default function Pacman() {
                             return current;
                         }
                     }
-                    else{
-                        // we have new input position
-                        let newDir = {x: current.x + lastInput.x, y: current.y + lastInput.y};
-                        
-                        if(Grid.ValidateCoord(newDir)){
-                            setTargetPosition( Grid.GetPositionFromCoords(newDir));
-                            prevInput = lastInput;
-                            return newDir;
-                        }
-                        else{
-                            newDir = {x: current.x + prevInput.x, y: current.y + prevInput.y};
-                        
-                            if(Grid.ValidateCoord(newDir)){
-                                setTargetPosition( Grid.GetPositionFromCoords(newDir));
-                                return newDir;
-                            }
-                            else{
-                                return current;
-                            }
-                        }
-                    }
-                });
-            }
+                }
+            });
         }
+    }
+}
 
-        CoroutineUtility.StartCoroutine(Movement());
-    }, []);
+
+export default function PacmanComponent() {
+    const [coords, setCoords] = useState<IVector2>(startPosition);
+    const [position, setTargetPosition] = useState<IVector2>(Grid.GetPositionFromCoords(startPosition));
+    
+    useEffect(() => {
+        let pacman: Pacman | undefined = new Pacman(setCoords, setTargetPosition);
+
+        return () => {
+            pacman!.Dispose();
+            pacman = undefined;
+        }
+    }, [])
 
     return (
         <div className="player" style={{...style, ...{top: position.y + 2, left: position.x + 2}}}></div>

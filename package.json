@@ -168,8 +168,8 @@
         "webpack-merge": "^5.8.0"
     },
     "build": {
-        "productName": "ElectronReact",
-        "appId": "org.erb.ElectronReact",
+        "productName": "Pacman",
+        "appId": "org.lazy.Pacman",
         "asar": true,
         "asarUnpack": "**\\*.{node,dll}",
         "files": [

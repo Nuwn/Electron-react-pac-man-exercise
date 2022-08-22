@@ -27,19 +27,19 @@ export default class Tick {
         requestAnimationFrame(this.Tick.bind(this));
     }
 
-    static OnUpdate(action: () => void): void{
+    static OnUpdate(action: () => void): void
+    {
         Tick.updateTargets.push(action);
+    }
+
+    static StopUpdate(action: () => void): void { 
+        Tick.updateTargets = Tick.updateTargets.filter(x => x !== action);
     }
     
     Update(): void {
         if (Tick.updateTargets.length <= 0) return;
 
         Tick.updateTargets.forEach((target, index, source) => {   
-            if(target == null){
-                source.splice(index, 1);
-                return;
-            }
-
             target();
         });
     }

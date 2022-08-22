@@ -35,20 +35,23 @@ export default class CoroutineUtility {
 
     static StartCoroutine(action: any){
         const coroutine = Coroutine.Generate(action, () => {
-            CoroutineUtility.Remove(coroutine);
+            CoroutineUtility.StopCoroutine(coroutine);
         });
         CoroutineUtility.enumerators.push(coroutine);
+        console.log(this.enumerators)
+        return coroutine;
     }
 
-    static Remove(coroutine: Coroutine) {
+    static StopCoroutine(coroutine: Coroutine) {
         const index = this.enumerators.indexOf(coroutine);
         if (index > -1) {
             this.enumerators.splice(index, 1);
         }
+        console.log(this.enumerators)
     }
 }
 
-class Coroutine implements Enumerator{
+class Coroutine {
     isDone: boolean | undefined = false;
     action: any;
     onComplete: () => void;
@@ -86,8 +89,4 @@ export const WaitForSeconds = function* (seconds: number){
         yield false;
     }
     yield true;
-}
-
-export interface Enumerator {
-    next() : void;
 }
