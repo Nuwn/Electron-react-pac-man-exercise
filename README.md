@@ -15,5 +15,5 @@ These systems can be found in [Scripts](http://https://github.com/Nuwn/Electron-
 
 More to come.
 
-#How to play
+# How to play
 Clone, install, and run "npm run package", then navigate to release->build->win-unpacked and run "Pacman.exe"
