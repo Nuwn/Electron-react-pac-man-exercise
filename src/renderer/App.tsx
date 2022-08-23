@@ -1,12 +1,14 @@
-import Gameplay from 'components/Gameplay';
-import CoroutineUtility from 'scripts/CoroutineUtility';
 import { Link, MemoryRouter, Route, Routes } from 'react-router-dom';
 import Tick from 'scripts/Tick';
-import './App.scss';
+import CoroutineUtility from 'scripts/CoroutineUtility';
 import { InputGetOrCreateInstance } from 'scripts/InputManager';
+import { Physics } from 'scripts/Physics';
+import Gameplay from 'components/Gameplay';
+import './App.scss';
 
+new Tick();
 new CoroutineUtility();
-new Tick(60);
+new Physics();
 InputGetOrCreateInstance();
 
 const Menu = () => {

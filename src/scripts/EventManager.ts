@@ -15,7 +15,6 @@ export class EventManager {
      */
     static AddListner(name: string, action: (arg0: any) => void) {
         let index = EventManager.listners.findIndex(x => x.name === name);
-        console.log(typeof action);
         if (index === -1){
             index = EventManager.listners.push({ name: name, actions: [] });
             EventManager.listners[index - 1].actions.push(action);

@@ -1,10 +1,10 @@
-import { Grid } from "components/Grid/Grid";
 import { useEffect, useState } from "react";
-import CoroutineUtility, { WaitForSeconds, WaitUntil } from "scripts/CoroutineUtility";
-import { EventManager } from "scripts/EventManager";
-import { GetSingleDirection } from "scripts/InputManager";
-import { Collider, Physics } from "scripts/Physics";
 import Tick from "scripts/Tick";
+import CoroutineUtility, { WaitForSeconds, WaitUntil } from "scripts/CoroutineUtility";
+import { GetSingleDirection } from "scripts/InputManager";
+import { EventManager } from "scripts/EventManager";
+import { ColliderComponent } from "components/Collider";
+import { Grid } from "components/Grid/Grid";
 import { Vector2 } from "scripts/Types";
 
 const style : any = {
@@ -26,8 +26,6 @@ class Pacman{
     lastInput: IVector2 = Vector2.Zero();
     coroutine: any;
 
-    collider: Collider = new Collider();
-
     SetEnabled(v: boolean){
         this.enabled = !v
     }
@@ -36,16 +34,16 @@ class Pacman{
         this.SetEnabled = this.SetEnabled.bind(this);
         this.OnUpdate = this.OnUpdate.bind(this);
 
-        Physics.Register(this.collider);
         Tick.OnUpdate(this.OnUpdate);
         this.coroutine = CoroutineUtility.StartCoroutine(this.Movement(setCoords, setTargetPosition));
+
         EventManager.AddListner("OnSetPause", this.SetEnabled);
     }
     
     Dispose() {
-        Physics.Unregister(this.collider);
         Tick.StopUpdate(this.OnUpdate);
         CoroutineUtility.StopCoroutine(this.coroutine);
+        
         EventManager.RemoveListner("OnSetPause", this.SetEnabled);
     }
 
@@ -122,6 +120,8 @@ export default function PacmanComponent() {
     }, [])
 
     return (
-        <div className="player" style={{...style, ...{top: position.y + 2, left: position.x + 2}}}></div>
+        <div className="player" style={{...style, ...{top: position.y + 2, left: position.x + 2}}}>
+            <ColliderComponent tag='player'/>
+        </div>
     );
 }

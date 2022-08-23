@@ -28,7 +28,7 @@ export default class CoroutineUtility {
         if (CoroutineUtility.enumerators.length <= 0) 
             return;
 
-        CoroutineUtility.enumerators.forEach((item, index, source) => {       
+        CoroutineUtility.enumerators.forEach((item) => {       
             item.next();
         });
     }
@@ -38,16 +38,14 @@ export default class CoroutineUtility {
             CoroutineUtility.StopCoroutine(coroutine);
         });
         CoroutineUtility.enumerators.push(coroutine);
-        console.log(this.enumerators)
         return coroutine;
     }
 
     static StopCoroutine(coroutine: Coroutine) {
         const index = this.enumerators.indexOf(coroutine);
         if (index > -1) {
-            this.enumerators.splice(index, 1);
+            this.enumerators = this.enumerators.filter(x => x !== coroutine);
         }
-        console.log(this.enumerators)
     }
 }
 

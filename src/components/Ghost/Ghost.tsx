@@ -13,15 +13,11 @@ const style : any = {
 }
 
 class Ghost{
- 
-    collider: Collider = new Collider();
 
     constructor(){
-        Physics.Register(this.collider);
     }
 
     Dispose(){
-        Physics.Unregister(this.collider);
     }
 }
 
@@ -32,9 +28,9 @@ export default function GhostComponent(params: any) {
     const [coords, setCoords] = useState<IVector2>(startPosition);
     const [position, setTargetPosition] = useState<IVector2>(Grid.GetPositionFromCoords(startPosition));
 
-    const ghost = useMemo(() => new Ghost(), []);
-
     useEffect(() => {
+        const ghost = new Ghost();
+
         return () => ghost.Dispose();
     }, [])
 

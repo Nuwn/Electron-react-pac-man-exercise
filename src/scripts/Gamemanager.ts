@@ -11,13 +11,11 @@ export default class Gamemanager {
         console.log("Game Starts");
         EventManager.Invoke("OnSetPause", false);
         yield* WaitForSeconds(10);
-        EventManager.Invoke("OnReturnToMainMenu");
+        EventManager.Invoke("OnSetPause", true);
     }
 
     constructor() {
-        console.log("Gamemanager init");
         this.coroutine = CoroutineUtility.StartCoroutine(this.GameLoop());
-
     }
 
     Dispose() {

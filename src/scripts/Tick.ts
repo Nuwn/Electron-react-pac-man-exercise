@@ -4,12 +4,10 @@ export default class Tick {
 
     static updateTargets: (() => void)[] = []; 
 
-    tickRate : number;
     previousTimeStamp: number | undefined = undefined;
 
-    constructor(tickRate: number) {
+    constructor() {
         Tick.instance = this;
-        this.tickRate = tickRate;
 
         requestAnimationFrame(this.Tick.bind(this));
     }
