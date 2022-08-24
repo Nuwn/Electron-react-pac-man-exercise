@@ -9,7 +9,8 @@ export const ColliderComponent = (params: any) => {
         const collider = new Collider(posRef, params.tag, false);
 
         collider.OnCollision = (collider: Collider) => {
-
+            if(params.OnCollision != null)
+                params.OnCollision(collider);
         }
 
         Physics.Register(collider);
@@ -21,6 +22,6 @@ export const ColliderComponent = (params: any) => {
 
 
     return (
-        <div style={{height: '100%', width: '100%'}} ref={posRef}></div>
+        <div style={{height: '100%', width: '100%', backgroundColor: "#66666666"}} ref={posRef}></div>
     )
 }

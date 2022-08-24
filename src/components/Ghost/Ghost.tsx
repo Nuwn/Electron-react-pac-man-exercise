@@ -1,3 +1,4 @@
+import { ColliderComponent } from "components/ColliderComponent";
 import { Grid } from "components/Grid/Grid";
 import { useEffect, useMemo, useState } from "react";
 import { Collider, Physics } from "scripts/Physics";
@@ -34,10 +35,16 @@ export default function GhostComponent(params: any) {
         return () => ghost.Dispose();
     }, [])
 
+    const OnCollision = (collider: Collider) => {
+        console.log(collider.tag)
+    }
+
+
     return (
         <div style={{...style, ...{top: position.y, left: position.x + 4}}}>
             <img src={ghostblank} style={{position: 'absolute', width: '100%'}}/>
             <img src={ghosteyes} style={{position: 'absolute'}}/>
+            <ColliderComponent tag="ghost" OnCollision={OnCollision}/>
         </div>
     );
 }

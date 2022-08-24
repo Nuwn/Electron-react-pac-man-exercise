@@ -3,9 +3,10 @@ import Tick from "scripts/Tick";
 import CoroutineUtility, { WaitForSeconds, WaitUntil } from "scripts/CoroutineUtility";
 import { GetSingleDirection } from "scripts/InputManager";
 import { EventManager } from "scripts/EventManager";
-import { ColliderComponent } from "components/Collider";
+import { ColliderComponent } from "components/ColliderComponent";
 import { Grid } from "components/Grid/Grid";
 import { Vector2 } from "scripts/Types";
+import { Collider } from "scripts/Physics";
 
 const style : any = {
     position: 'absolute',

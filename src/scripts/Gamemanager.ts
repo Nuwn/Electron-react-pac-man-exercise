@@ -10,8 +10,6 @@ export default class Gamemanager {
         yield* WaitForSeconds(10);
         console.log("Game Starts");
         EventManager.Invoke("OnSetPause", false);
-        yield* WaitForSeconds(10);
-        EventManager.Invoke("OnSetPause", true);
     }
 
     constructor() {
