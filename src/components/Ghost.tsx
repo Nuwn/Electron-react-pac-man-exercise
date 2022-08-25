@@ -1,11 +1,11 @@
 import { ColliderComponent } from "components/ColliderComponent";
 import { Grid } from "components/Grid/Grid";
-import { useEffect, useMemo, useState } from "react";
-import { Collider, Physics } from "scripts/Physics";
-import ghostblank from '../../assets/ghost-blank.png';
-import ghosteyes from '../../assets/ghost-eyes.png';
+import { useEffect, useState } from "react";
+import { Collider} from "scripts/Physics";
+import ghostblank from '../assets/ghost-blank.png';
+import ghosteyes from '../assets/ghost-eyes.png';
 
-
+enum GhostState{ IDLE, HUNT, WANDER, SCARED, DEAD }
 
 const style : any = {
     position: 'absolute',
@@ -14,6 +14,8 @@ const style : any = {
 }
 
 class Ghost{
+
+    state: GhostState = GhostState.IDLE;
 
     constructor(){
     }
@@ -39,7 +41,6 @@ export default function GhostComponent(params: any) {
         console.log(collider.tag)
     }
 
-
     return (
         <div style={{...style, ...{top: position.y, left: position.x + 4}}}>
             <img src={ghostblank} style={{position: 'absolute', width: '100%'}}/>
@@ -48,3 +49,4 @@ export default function GhostComponent(params: any) {
         </div>
     );
 }
+

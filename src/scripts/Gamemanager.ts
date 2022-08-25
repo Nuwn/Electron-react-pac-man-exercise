@@ -5,6 +5,7 @@ export default class Gamemanager {
     
     x: number = 0;
     coroutine: any;
+    score: number = 0;
 
     *GameLoop(){
         yield* WaitForSeconds(10);

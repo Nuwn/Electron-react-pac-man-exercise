@@ -6,7 +6,7 @@ export const ColliderComponent = (params: any) => {
     const posRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const collider = new Collider(posRef, params.tag, false);
+        const collider = new Collider(posRef, params.tag, params.IsStatic);
 
         collider.OnCollision = (collider: Collider) => {
             if(params.OnCollision != null)
@@ -22,6 +22,6 @@ export const ColliderComponent = (params: any) => {
 
 
     return (
-        <div style={{height: '100%', width: '100%', backgroundColor: "#66666666"}} ref={posRef}></div>
+        <div style={{position: 'absolute', height: '100%', width: '100%', backgroundColor: "#66666666"}} ref={posRef}></div>
     )
 }

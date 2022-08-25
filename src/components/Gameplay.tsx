@@ -2,9 +2,9 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { EventManager } from 'scripts/EventManager';
 import Gamemanager from 'scripts/Gamemanager';
-import GhostComponent from './Ghost/Ghost';
+import GhostComponent from './Ghost';
 import { GridView } from './Grid/Grid';
-import PacmanComponent from './Pacman/Pacman';
+import PacmanComponent from './Pacman';
 
 export default function Gameplay() {
     

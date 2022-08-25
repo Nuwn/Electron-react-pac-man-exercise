@@ -37,7 +37,7 @@ export default class Tick {
     Update(): void {
         if (Tick.updateTargets.length <= 0) return;
 
-        Tick.updateTargets.forEach((target, index, source) => {   
+        Tick.updateTargets.forEach((target) => {   
             target();
         });
     }

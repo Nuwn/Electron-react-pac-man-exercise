@@ -1,7 +1,19 @@
+import { CSSProperties, useMemo } from 'react';
 import * as gridSettings from './gridSettings.json';
 import EasyStar from 'easystarjs';
-import { useMemo } from 'react';
 import gameboard from '../../assets/Gameboard.png';
+import { Point } from 'components/Point';
+
+const gridStyle: CSSProperties | undefined = { 
+    userSelect: 'none', 
+    position:'absolute', 
+    color:'white', 
+    width: 20, 
+    height: 20, 
+    display: 'flex', 
+    justifyContent: 'center', 
+    alignItems: 'center'
+}
 
 export const GridView = () => {
     const grid = useMemo(() => Grid.GetOrCreateInstance(), []);
@@ -12,14 +24,12 @@ export const GridView = () => {
             {grid.matrix.map((y: number[], yindex: number) => y.map((val: number, xindex: number) => {
                 const rect = {x: xindex, y: yindex};
                 const pos = Grid.GetPositionFromCoords(rect);
-                const size = 20;
                 pos.x += 10;
                 pos.y += 10;
 
-                //update this with points
                 return (
-                    <div key={yindex + 1 * xindex} style={{ position:'absolute', color:'white', top: pos.y, left: pos.x, width: size, height: size, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                        {val === 1 ? '●' : ''}
+                    <div key={yindex + 1 * xindex} style={{...gridStyle, ...{ top: pos.y, left: pos.x }}}>
+                        { val === 1 ? <Point /> : null }
                     </div>
                 )
             }))}
@@ -48,13 +58,12 @@ export class Grid{
     SetupEasystar(){
         const easystar = new EasyStar.js();
         easystar.setGrid(this.matrix);
-        easystar.setAcceptableTiles([1]);
+        easystar.setAcceptableTiles([1, 2]);
         this.easystar = easystar;
     }
 
     static SetWeight(position: IVector2, weight: number){
         Grid.instance.matrix[position.y][position.x] = weight;
-        console.log(Grid.instance.matrix);
     }
 
     static GetOrCreateInstance(){

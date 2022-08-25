@@ -27,10 +27,12 @@ export class Physics{
         const playerCollider = this.colliders.find(x => x.tag === "player");
         if(playerCollider == null) return;
 
+        let playerRect = playerCollider.GetPosition();
+        
         this.colliders.forEach(collider => {
             if(collider === playerCollider) return;
 
-            if(Collider.IsOverLap(playerCollider, collider))
+            if(Collider.IsOverLap(playerRect, collider.staticRect || collider.GetPosition()))
                 collider.DoCollision(playerCollider);
         });
     }
@@ -48,11 +50,15 @@ export class Collider{
     isStatic: boolean = false;
     tag: string;
     posRef: RefObject<HTMLDivElement>
+    staticRect: DOMRect | undefined;
     
     constructor(posRef: RefObject<HTMLDivElement>, tag: string = 'default', isStatic: boolean = false){
         this.posRef = posRef;
         this.tag = tag;
         this.isStatic = isStatic;
+
+        if(isStatic) // if it's static we can cache the position for better performance
+            this.staticRect = this.GetPosition();
     }
     
     OnCollision: ((collider: Collider) => void) | undefined = undefined;
@@ -67,17 +73,14 @@ export class Collider{
         return this.posRef.current?.getBoundingClientRect();
     }
 
-    static IsOverLap(col1: Collider, col2: Collider){
-        let col1pos = col1.GetPosition();
-        let col2pos = col2.GetPosition();
-
-        if(col1pos == null || col2pos == null) return false;
+    static IsOverLap(col1rect: DOMRect | undefined, col2rect: DOMRect | undefined){
+        if(col1rect == null || col2rect == null) return false;
 
         return !(
-            (col1pos.top + col1pos.height < col2pos.top) ||
-            (col1pos.top > col2pos.top + col2pos.height) ||
-            (col1pos.left + col1pos.width < col2pos.left) ||
-            (col1pos.left > col2pos.left + col2pos.width)
+            (col1rect.top + col1rect.height < col2rect.top) ||
+            (col1rect.top > col2rect.top + col2rect.height) ||
+            (col1rect.left + col1rect.width < col2rect.left) ||
+            (col1rect.left > col2rect.left + col2rect.width)
         );
     }
 }
