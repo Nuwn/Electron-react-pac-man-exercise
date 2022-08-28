@@ -16,11 +16,11 @@ export default function Gameplay() {
 
     useEffect(() => {
         const gamemanager = new Gamemanager();
-        EventManager.AddListner("OnReturnToMainMenu", LoadMainMenu);
+        EventManager.AddListener("OnReturnToMainMenu", LoadMainMenu);
 
         return() => {
             gamemanager.Dispose();
-            EventManager.RemoveListner("OnReturnToMainMenu", LoadMainMenu);
+            EventManager.RemoveListener("OnReturnToMainMenu", LoadMainMenu);
         }
     }, []);
     

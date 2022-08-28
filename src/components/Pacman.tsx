@@ -6,18 +6,17 @@ import { EventManager } from "scripts/EventManager";
 import { ColliderComponent } from "components/ColliderComponent";
 import { Grid } from "components/Grid/Grid";
 import { Vector2 } from "scripts/Types";
+import pacmanGraphic from "../assets/Player.png";
+import pacmanGraphicOpen from "../assets/PlayerOpen.png";
 
 const style : CSSProperties | undefined = {
     position: 'absolute',
-    borderRadius: '100%',
-    border: 0,
-    backgroundColor: 'yellow',
     height: 36, 
     width: 36, 
     transition: 'all 0.2s linear'
 }
 
-const startPosition = new Vector2(16, 15);
+const startPosition = new Vector2(15, 15);
 
 class Pacman{
 
@@ -37,14 +36,14 @@ class Pacman{
         Tick.OnUpdate(this.OnUpdate);
         this.coroutine = CoroutineUtility.StartCoroutine(this.Movement(setCoords, setTargetPosition));
 
-        EventManager.AddListner("OnSetPause", this.SetEnabled);
+        EventManager.AddListener("OnSetPause", this.SetEnabled);
     }
     
     Dispose() {
         Tick.StopUpdate(this.OnUpdate);
         CoroutineUtility.StopCoroutine(this.coroutine);
         
-        EventManager.RemoveListner("OnSetPause", this.SetEnabled);
+        EventManager.RemoveListener("OnSetPause", this.SetEnabled);
     }
 
     OnUpdate(){         
@@ -109,18 +108,25 @@ class Pacman{
 export default function PacmanComponent() {
     const [coords, setCoords] = useState<IVector2>(startPosition);
     const [position, setTargetPosition] = useState<IVector2>(Grid.GetPositionFromCoords(startPosition));
+    const [graphic, setGraphic] = useState<string>(pacmanGraphic);
     
     useEffect(() => {
-        let pacman: Pacman | undefined = new Pacman(setCoords, setTargetPosition);
+        const pacman: Pacman = new Pacman(setCoords, setTargetPosition);
+
+        const interval = setInterval(() => {
+            console.log(graphic)
+            setGraphic((current) => { return current === pacmanGraphic ? pacmanGraphicOpen: pacmanGraphic});
+        }, 200);
 
         return () => {
-            pacman!.Dispose();
-            pacman = undefined;
+            clearInterval(interval);
+            pacman.Dispose();
         }
     }, [])
 
     return (
         <div className="player" style={{...style, ...{top: position.y + 2, left: position.x + 2}}}>
+            <img src={graphic} />
             <ColliderComponent tag='player'/>
         </div>
     );

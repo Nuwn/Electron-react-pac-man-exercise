@@ -1,8 +1,10 @@
-import { CSSProperties, useMemo } from 'react';
+import { CSSProperties, useEffect, useMemo, useRef } from 'react';
 import * as gridSettings from './gridSettings.json';
 import EasyStar from 'easystarjs';
 import gameboard from '../../assets/Gameboard.png';
 import { Point } from 'components/Point';
+import CoroutineUtility, { WaitForSeconds } from 'scripts/CoroutineUtility';
+import { EventManager } from 'scripts/EventManager';
 
 const gridStyle: CSSProperties | undefined = { 
     userSelect: 'none', 
@@ -16,26 +18,66 @@ const gridStyle: CSSProperties | undefined = {
 }
 
 export const GridView = () => {
-    const grid = useMemo(() => Grid.GetOrCreateInstance(), []);
+
+    function* UpgradeTimer () {
+        while(true){
+            yield* WaitForSeconds(15);
+            
+            // Get the grid item and generate a ID
+            const id = GenerateRandomUpgrade();
+            if(id === undefined)
+                continue; 
+
+            EventManager.Invoke("OnUpgradePoint", id);
+        }
+    }
+
+    useEffect(() => {
+        const coroutine = CoroutineUtility.StartCoroutine(UpgradeTimer());
+
+        return () => {
+            CoroutineUtility.StopCoroutine(coroutine);
+        }
+    },[]);
 
     return (
         <div className="grid">
             <img src={gameboard} style={{position: 'absolute', width: '100%', height: '100%' }} />
-            {grid.matrix.map((y: number[], yindex: number) => y.map((val: number, xindex: number) => {
+            {Grid.GetOrCreateInstance().matrix.map((y: number[], yindex: number) => y.map((val: number, xindex: number) => {
                 const rect = {x: xindex, y: yindex};
                 const pos = Grid.GetPositionFromCoords(rect);
                 pos.x += 10;
                 pos.y += 10;
 
                 return (
-                    <div key={yindex + 1 * xindex} style={{...gridStyle, ...{ top: pos.y, left: pos.x }}}>
-                        { val === 1 ? <Point /> : null }
+                    <div key={JSON.stringify(rect)} style={{...gridStyle, ...{ top: pos.y, left: pos.x }}}>
+                        { val === 1 ? <Point id={rect} /> : null }
                     </div>
                 )
             }))}
         </div>
     );
 };
+
+
+function GenerateRandomUpgrade(): IVector2 | undefined {
+    let success = false;
+    let res: IVector2 | undefined;
+    const grid = Grid.GetOrCreateInstance();
+
+    while (success === false){
+        const ranY = Math.floor(Math.random() * gridSettings.gridSize.y);
+        const ranX = Math.floor(Math.random() * gridSettings.gridSize.x);
+
+        if(grid.matrix[ranY][ranX] === 1){
+            success = true;
+            res = {x:ranX, y:ranY};
+        }
+    }
+
+    return res;
+}
+
 
 export class Grid{
     static instance: Grid;
@@ -58,7 +100,7 @@ export class Grid{
     SetupEasystar(){
         const easystar = new EasyStar.js();
         easystar.setGrid(this.matrix);
-        easystar.setAcceptableTiles([1, 2]);
+        easystar.setAcceptableTiles([-1, 1, 2]);
         this.easystar = easystar;
     }
 

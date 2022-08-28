@@ -13,12 +13,21 @@ export default class Gamemanager {
         EventManager.Invoke("OnSetPause", false);
     }
 
+    AddPoints(points: number){
+        this.score += points;
+        console.log(this.score)
+    }
+
     constructor() {
+        this.AddPoints = this.AddPoints.bind(this);
+
+
         this.coroutine = CoroutineUtility.StartCoroutine(this.GameLoop());
+
+        EventManager.AddListener('OnAddPoints', this.AddPoints);
     }
 
     Dispose() {
         CoroutineUtility.StopCoroutine(this.coroutine);
     }
-
 }

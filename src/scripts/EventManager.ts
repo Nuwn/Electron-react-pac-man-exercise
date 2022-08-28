@@ -13,7 +13,7 @@ export class EventManager {
      * @param name the name of the event, unique.
      * @param action the callback to invoke.
      */
-    static AddListner(name: string, action: (arg0: any) => void) {
+    static AddListener(name: string, action: (arg0: any) => void) {
         let index = EventManager.listners.findIndex(x => x.name === name);
         if (index === -1){
             index = EventManager.listners.push({ name: name, actions: [] });
@@ -28,7 +28,7 @@ export class EventManager {
     * @param name the name of the event, unique.
     * @param action the callback to invoke.
     */
-    static RemoveListner(name: string, action: (arg0: any) => void) {
+    static RemoveListener(name: string, action: (arg0: any) => void) {
         let index = EventManager.listners.findIndex(x => x.name === name);
 
         if (index === -1) return;
@@ -50,9 +50,7 @@ export class EventManager {
 
         for (let i = 0; i < listner.actions.length; i++) {
             const element = listner.actions[i];
-            element.call(undefined, value);
-            return true;
+            element(value);
         }
-        return false;
     };
 }
