@@ -1,6 +1,9 @@
 # Electron-pac-man-exercise
  Building a game in react and electron to rearn more about the tools, frameworks and typescript.
  
+ Keep in mind this is a learning and testing ground, so some code might not be the "optimal" way of doing the thing it does.
+ There's many solutions to a problem, And I'm testing a lot of different solutions to learn more.  
+ 
  Many of the tools is directly inspired by Unity, where I have most experience in.
  
 ######  Currently in development.
