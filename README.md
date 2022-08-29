@@ -16,6 +16,8 @@
 
 These systems can be found in [Scripts](http://https://github.com/Nuwn/Electron-react-pac-man-exercise/tree/main/src/scripts "Scripts")
 
+A* pathfinding from [EasystarJS](https://github.com/prettymuchbryce/easystarjs)
+
 More to come.
 
 # How to play
