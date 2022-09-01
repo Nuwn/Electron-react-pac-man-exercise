@@ -9,6 +9,7 @@ import { Vector2 } from "scripts/Types";
 import pacmanGraphic from "../assets/Player.png";
 import pacmanGraphicOpen from "../assets/PlayerOpen.png";
 
+
 const style : CSSProperties | undefined = {
     position: 'absolute',
     height: 36, 
@@ -16,10 +17,8 @@ const style : CSSProperties | undefined = {
     transition: 'all 0.2s linear'
 }
 
-const startPosition = new Vector2(15, 15);
 
-class Pacman{
-
+export class Pacman{
     enabled = false;
     prevInput: IVector2 = Vector2.Zero();
     lastInput: IVector2 = Vector2.Zero();
@@ -29,12 +28,13 @@ class Pacman{
         this.enabled = !v
     }
 
-    constructor(setCoords: any, setTargetPosition: any){
+    constructor(setState: any){
+
         this.SetEnabled = this.SetEnabled.bind(this);
         this.OnUpdate = this.OnUpdate.bind(this);
 
         Tick.OnUpdate(this.OnUpdate);
-        this.coroutine = CoroutineUtility.StartCoroutine(this.Movement(setCoords, setTargetPosition));
+        this.coroutine = CoroutineUtility.StartCoroutine(this.Movement(setState));
 
         EventManager.AddListener("OnSetPause", this.SetEnabled);
     }
@@ -52,12 +52,12 @@ class Pacman{
         if(input != Vector2.Zero()) 
             this.lastInput = input;  
     }
-    *Movement(setCoords: any, setTargetPosition: any){
+    *Movement(setState: any){
         while(true){
             yield* WaitUntil(() => this.enabled);
             yield* WaitForSeconds(0.2);              
             
-            setCoords((current: IVector2) => { 
+            setState((current: { coords:IVector2, position: IVector2 }) => { 
                 const prevInput = this.prevInput;
                 const lastInput = this.lastInput;
 
@@ -68,11 +68,11 @@ class Pacman{
                 // if no new input, keep moving with previous action
                 if(Vector2.isZero(lastInput))
                 {
-                    const newDir = {x: current.x + prevInput.x, y: current.y + prevInput.y};
+                    const newCoords = {x: current.coords.x + prevInput.x, y: current.coords.y + prevInput.y};
                     
-                    if(Grid.ValidateCoord(newDir)){
-                        setTargetPosition( Grid.GetPositionFromCoords(newDir));
-                        return newDir;
+                    if(Grid.ValidateCoord(newCoords)){
+                        const newPos = {position: Grid.GetPositionFromCoords(newCoords), coords: newCoords};
+                        return {...current, ...newPos};
                     }
                     else{
                         return current;
@@ -80,19 +80,19 @@ class Pacman{
                 }
                 else{
                     // we have new input position
-                    let newDir = {x: current.x + lastInput.x, y: current.y + lastInput.y};
+                    let newCoords = {x: current.coords.x + lastInput.x, y: current.coords.y + lastInput.y};
                     
-                    if(Grid.ValidateCoord(newDir)){
-                        setTargetPosition( Grid.GetPositionFromCoords(newDir));
+                    if(Grid.ValidateCoord(newCoords)){
+                        const newPos = {position: Grid.GetPositionFromCoords(newCoords), coords: newCoords};
                         this.prevInput = lastInput;
-                        return newDir;
+                        return {...current, ...newPos};
                     }
                     else{
-                        newDir = {x: current.x + prevInput.x, y: current.y + prevInput.y};
+                        newCoords = {x: current.coords.x + prevInput.x, y: current.coords.y + prevInput.y};
                     
-                        if(Grid.ValidateCoord(newDir)){
-                            setTargetPosition( Grid.GetPositionFromCoords(newDir));
-                            return newDir;
+                        if(Grid.ValidateCoord(newCoords)){
+                            const newPos = {position: Grid.GetPositionFromCoords(newCoords), coords: newCoords};
+                            return {...current, ...newPos};
                         }
                         else{
                             return current;
@@ -104,18 +104,16 @@ class Pacman{
     }
 }
 
-
-export default function PacmanComponent() {
-    const [coords, setCoords] = useState<IVector2>(startPosition);
-    const [position, setTargetPosition] = useState<IVector2>(Grid.GetPositionFromCoords(startPosition));
-    const [graphic, setGraphic] = useState<string>(pacmanGraphic);
+export function PacmanComponent(params: any) {
+    
     
     useEffect(() => {
-        const pacman: Pacman = new Pacman(setCoords, setTargetPosition);
+        const pacman: Pacman = new Pacman(params.setState);
 
         const interval = setInterval(() => {
-            console.log(graphic)
-            setGraphic((current) => { return current === pacmanGraphic ? pacmanGraphicOpen: pacmanGraphic});
+            params.setState((prevState: any) => { 
+                return {...prevState, ...{graphic: prevState.graphic === pacmanGraphic ? pacmanGraphicOpen: pacmanGraphic}}
+            });
         }, 200);
 
         return () => {
@@ -124,9 +122,10 @@ export default function PacmanComponent() {
         }
     }, [])
 
+
     return (
-        <div className="player" style={{...style, ...{top: position.y + 2, left: position.x + 2}}}>
-            <img src={graphic} />
+        <div className="player" style={{...style, ...{top: params.state.position.y + 2, left: params.state.position.x + 2}}}>
+            <img src={params.state.graphic} />
             <ColliderComponent tag='player'/>
         </div>
     );

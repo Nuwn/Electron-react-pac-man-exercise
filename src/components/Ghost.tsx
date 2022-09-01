@@ -5,35 +5,42 @@ import { Collider} from "scripts/Physics";
 import { ColliderComponent } from "components/ColliderComponent";
 import ghostblank from '../assets/ghost-blank.png';
 import ghosteyes from '../assets/ghost-eyes.png';
+import CoroutineUtility, { WaitForSeconds, WaitUntil } from "scripts/CoroutineUtility";
+import * as gridSettings from './Grid/gridSettings.json';
+
 
 enum GhostState{ IDLE, HUNT, WANDER, SCARED, DEAD }
 
 const style : any = {
     position: 'absolute',
     width: 32,
-    height: 32
+    height: 32,
+    transition: 'all 0.2s linear'
 }
 
-export default class GhostComponent extends Component<{startPosition: IVector2}> { 
+export default class GhostComponent extends Component<{startPosition: IVector2, pacmanCoords:IVector2}> { 
     
+    grid: Grid;
     state: {
-        enabled: boolean,
         coords: IVector2, 
         position: IVector2, 
-        ghost: GhostState
+        ghost: GhostState,
+        playerPos: IVector2
     }
+    movementCoroutine: any;
+    pathQueue;
 
-    constructor(props: {startPosition: IVector2}){
+    constructor(props: {startPosition: IVector2, pacmanCoords:IVector2}){
         super(props);
+        this.grid = Grid.GetOrCreateInstance();
 
         this.state = {
-            enabled: false,
             coords: props.startPosition,
             position: Grid.GetPositionFromCoords(props.startPosition),
-            ghost: GhostState.IDLE
+            ghost: GhostState.HUNT,
+            playerPos: props.pacmanCoords
         }
 
-        this.ghostLoop = this.ghostLoop.bind(this);
         this.OnPowerUp = this.OnPowerUp.bind(this);
         this.SetEnabled = this.SetEnabled.bind(this);
         this.OnCollision = this.OnCollision.bind(this);
@@ -41,17 +48,60 @@ export default class GhostComponent extends Component<{startPosition: IVector2}>
         EventManager.AddListener("OnPowerUp", this.OnPowerUp);
         EventManager.AddListener("OnSetPause", this.SetEnabled);
 
+        this.movementCoroutine = CoroutineUtility.StartCoroutine(this.MovementLoop());
+
+        this.pathQueue = new PathQueue(() => {
+            let targetPosition: IVector2;
+    
+            switch (this.state.ghost){
+                case GhostState.IDLE:
+                    return undefined;
+                case GhostState.WANDER:
+                    targetPosition = Grid.GetRandomCoords()!;
+                    break;
+                case GhostState.HUNT:
+                    targetPosition = this.state.playerPos;
+                    break;
+                case GhostState.SCARED:
+                    targetPosition = gridSettings.ghostSpawn;
+                    break;
+                case GhostState.DEAD:
+                    targetPosition = gridSettings.ghostSpawn;
+                    break;
+                default:
+                    return undefined;
+            }
+      
+            return [this.state.coords, targetPosition];
+        });
+
     }
 
+    static getDerivedStateFromProps(props: any, state:any) {
+        if(props.pacmanCoords !== state.playerPos){
+            return{...state, ...{playerPos: props.pacmanCoords}}
+        }
+        return null;
+    }
     componentWillUnmount(){
         EventManager.RemoveListener("OnPowerUp", this.OnPowerUp)
         EventManager.RemoveListener("OnSetPause", this.SetEnabled);
     }
+    
 
-    *ghostLoop(){
+    *MovementLoop(){
+        while(true){
+            yield* WaitUntil(() => this.state.ghost !== GhostState.IDLE);
+            yield* WaitForSeconds(0.2);
 
+            const next = this.pathQueue.GetNext();
+            if(next === undefined) continue;
+            const position = Grid.GetPositionFromCoords(next);
+
+            this.setState({coords: next, position: position});
+        }
     }
-   
+
     SetEnabled(v: boolean){
         this.setState({enabled: !v});
     }
@@ -61,7 +111,7 @@ export default class GhostComponent extends Component<{startPosition: IVector2}>
     }
 
     OnCollision(collider: Collider) {
-        this.setState({position: {x: 3, y : 4}});
+
     }
 
     render(){
@@ -72,5 +122,38 @@ export default class GhostComponent extends Component<{startPosition: IVector2}>
                 <ColliderComponent tag="ghost" OnCollision={this.OnCollision}/>
             </div>
         );
+    }
+}
+
+class PathQueue{
+    grid;
+    queue: any[] = [];
+    callback;
+
+    /**
+     * @param RetargetCallback Callback logic that should provide current position and target position [Current, Target]
+     */ 
+    constructor(RetargetCallback: () => [IVector2, IVector2] | undefined) {
+        this.grid = Grid.GetOrCreateInstance();
+        this.callback = RetargetCallback;
+    }
+
+    GetNext(): IVector2 | undefined {
+        if(this.queue.length === 0){
+            this.Retarget();
+            return;
+        }
+
+        return this.queue.shift();
+    }
+
+    Retarget(): void {
+        const [current, nextTarget] = this.callback() || [];
+        if(current === undefined ||nextTarget === undefined) return;
+
+        this.grid.easystar.findPath(current.x, current.y, nextTarget.x, nextTarget.y, (path: IVector2[]) => {
+                this.queue = path || [];          
+        });
+        this.grid.easystar.calculate();
     }
 }

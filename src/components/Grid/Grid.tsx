@@ -19,12 +19,15 @@ const gridStyle: CSSProperties | undefined = {
 
 export const GridView = () => {
 
+    /* 
+        Generate a Powerup at a random location every 15 seconds
+    */
     function* UpgradeTimer () {
         while(true){
             yield* WaitForSeconds(15);
             
             // Get the grid item and generate a ID
-            const id = GenerateRandomUpgrade();
+            const id = Grid.GetRandomCoords();
             if(id === undefined)
                 continue; 
 
@@ -58,25 +61,6 @@ export const GridView = () => {
         </div>
     );
 };
-
-
-function GenerateRandomUpgrade(): IVector2 | undefined {
-    let success = false;
-    let res: IVector2 | undefined;
-    const grid = Grid.GetOrCreateInstance();
-
-    while (success === false){
-        const ranY = Math.floor(Math.random() * gridSettings.gridSize.y);
-        const ranX = Math.floor(Math.random() * gridSettings.gridSize.x);
-
-        if(grid.matrix[ranY][ranX] === 1){
-            success = true;
-            res = {x:ranX, y:ranY};
-        }
-    }
-
-    return res;
-}
 
 
 export class Grid{
@@ -124,5 +108,23 @@ export class Grid{
     static GetPositionFromCoords(coords: IVector2){
         const multiplier = Grid.GetOrCreateInstance().positionMultiplier;
         return {x: coords.x * multiplier.x, y: coords.y * multiplier.y}
+    }
+
+    static GetRandomCoords(): IVector2 | undefined {
+        let success = false;
+        let res: IVector2 | undefined;
+        const grid = Grid.GetOrCreateInstance();
+    
+        while (success === false){
+            const ranY = Math.floor(Math.random() * gridSettings.gridSize.y);
+            const ranX = Math.floor(Math.random() * gridSettings.gridSize.x);
+    
+            if(grid.matrix[ranY][ranX] === 1){
+                success = true;
+                res = {x:ranX, y:ranY};
+            }
+        }
+    
+        return res;
     }
 }
